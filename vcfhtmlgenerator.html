@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCF Generator Web App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      color: #f3f6fb;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 600px;
+      margin-top: 48px;
+      position: relative;
+      z-index: 2;
+    }
+    .floating-card {
+      background: rgba(30, 41, 59, 0.95);
+      border-radius: 32px;
+      box-shadow: 0 12px 32px 0 rgba(0,0,0,0.25), 0 1.5px 8px 0 rgba(0,255,255,0.08);
+      padding: 2.5rem 2rem 2rem 2rem;
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(0,255,255,0.12);
+      transition: box-shadow 0.3s;
+    }
+    .floating-card:hover {
+      box-shadow: 0 24px 48px 0 rgba(0,0,0,0.35), 0 2px 16px 0 rgba(0,255,255,0.18);
+      border-color: #00B4D8;
+    }
+    .form-label {
+      font-weight: 600;
+      color: #00B4D8;
+      letter-spacing: 0.02em;
+    }
+    .form-control, .form-select {
+      background: rgba(255,255,255,0.08);
+      color: #f3f6fb;
+      border: 1.5px solid #00B4D8;
+      border-radius: 12px;
+      font-size: 1.08em;
+      margin-bottom: 2px;
+      transition: border-color 0.2s;
+    }
+    .form-control::placeholder, .form-select::placeholder {
+      color: #bfc7d5 !important;
+      opacity: 1;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #48eaff;
+      box-shadow: 0 0 0 2px #00B4D833;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+    }
+    .input-group-text {
+      background: #1e293b;
+      color: #00B4D8;
+      border: none;
+      font-weight: 600;
+      border-radius: 12px 0 0 12px;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #00B4D8 0%, #48eaff 100%);
+      border: none;
+      font-weight: 700;
+      font-size: 1.15em;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px 0 rgba(0,180,216,0.12);
+      letter-spacing: 0.04em;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #48eaff 0%, #00B4D8 100%);
+    }
+    .btn-outline-primary, .btn-outline-success {
+      border-radius: 12px;
+      font-weight: 600;
+      border-width: 1.5px;
+      color: #00B4D8;
+      border-color: #00B4D8;
+      background: rgba(0,180,216,0.08);
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-outline-primary:hover, .btn-outline-success:hover {
+      background: #00B4D8;
+      color: #fff;
+    }
+    .phone-group { display: flex; gap: 8px; margin-bottom: 8px; }
+    .remove-phone { color: #ff4d6d; cursor: pointer; font-size: 1.3em; align-self: center; }
+    .logo {
+      display: block;
+      margin: 0 auto 24px auto;
+      max-width: 252px;
+      max-height: 112px;
+      filter: drop-shadow(0 2px 16px #00B4D8cc);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      padding: 8px;
+    }
+    @media (max-width: 600px) {
+      .container { max-width: 98vw; }
+      .floating-card { padding: 1.2rem 0.5rem; }
+      .logo { max-width: 180px; max-height: 80px; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="floating-card">
+      <div class="text-center mb-4">
+        <img src="logo.png" alt="Logo" class="logo">
+      </div>
+      <form id="vcfForm">
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-user-line"></i> Full Name</label>
+          <input type="text" class="form-control" id="fullName" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-phone-line"></i> Phone Numbers</label>
+          <div id="phoneNumbers"></div>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="addPhoneBtn">Add Phone</button>
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-mail-line"></i> Email</label>
+          <input type="text" class="form-control" id="email">
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-building-line"></i> Company</label>
+          <input type="text" class="form-control" id="company">
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-briefcase-line"></i> Position/Title</label>
+          <input type="text" class="form-control" id="position">
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-map-pin-line"></i> Address</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="address" placeholder="e.g. 123 Main St, City, Country">
+            <button type="button" class="btn btn-outline-success" id="mapsBtn">Google Maps</button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-share-line"></i> Social Media</label>
+          <div class="input-group">
+            <select class="form-select" id="socialType">
+              <option value="">Choose...</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Twitter">Twitter</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Instagram">Instagram</option>
+              <option value="TikTok">TikTok</option>
+              <option value="YouTube">YouTube</option>
+              <option value="Other">Other</option>
+            </select>
+            <input type="text" class="form-control" id="socialHandle" placeholder="Username/Handle">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-global-line"></i> Website</label>
+          <div class="input-group">
+            <span class="input-group-text">www.</span>
+            <input type="text" class="form-control" id="website" placeholder="yourdomain.com">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label"><i class="ri-image-line"></i> Photo</label>
+          <input type="file" class="form-control" id="photo" accept="image/jpeg,image/png">
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Generate Card</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    // Phone number add/remove logic
+    function createPhoneInput(type = "Mobile") {
+      const div = document.createElement('div');
+      div.className = 'phone-group';
+      const select = document.createElement('select');
+      select.className = 'form-select';
+      select.style.maxWidth = '110px';
+      select.innerHTML = `<option value="CELL">Mobile</option><option value="HOME">Home</option>`;
+      select.value = type;
+      const input = document.createElement('input');
+      input.type = 'tel';
+      input.className = 'form-control';
+      input.placeholder = type + ' Phone';
+      input.style.setProperty('color', '#f3f6fb');
+      input.setAttribute('placeholder', type + ' Phone');
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'remove-phone';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.onclick = function() {
+        div.remove();
+      };
+      div.appendChild(select);
+      div.appendChild(input);
+      div.appendChild(removeBtn);
+      return div;
+    }
+    const phoneNumbersDiv = document.getElementById('phoneNumbers');
+    document.getElementById('addPhoneBtn').onclick = function() {
+      phoneNumbersDiv.appendChild(createPhoneInput());
+    };
+    // Add one mobile and one home by default
+    phoneNumbersDiv.appendChild(createPhoneInput('CELL'));
+    phoneNumbersDiv.appendChild(createPhoneInput('HOME'));
+
+    function encodePhoto(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result.split(',')[1];
+        callback(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Google Maps integration for address
+    document.getElementById('mapsBtn').onclick = function() {
+      const address = document.getElementById('address').value;
+      if(address) {
+        const url = 'https://maps.google.com/?q=' + encodeURIComponent(address);
+        window.open(url, '_blank');
+      }
+    };
+    document.getElementById('vcfForm').onsubmit = function(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('fullName').value;
+      const email = document.getElementById('email').value;
+      const company = document.getElementById('company').value;
+      const position = document.getElementById('position').value;
+      const address = document.getElementById('address').value;
+      const socialType = document.getElementById('socialType').value;
+      const socialHandle = document.getElementById('socialHandle').value.trim();
+      let website = document.getElementById('website').value;
+      if(website && !website.startsWith('www.')) website = 'www.' + website;
+      const photoInput = document.getElementById('photo');
+      let vcf = "BEGIN:VCARD\nVERSION:3.0\n";
+      vcf += `FN:${fullName}\n`;
+      // Phone numbers
+      const phoneGroups = phoneNumbersDiv.querySelectorAll('.phone-group');
+      phoneGroups.forEach(group => {
+        const type = group.querySelector('select').value;
+        const number = group.querySelector('input').value;
+        if(number) vcf += `TEL;TYPE=${type}:${number}\n`;
+      });
+      if(email) vcf += `EMAIL;INTERNET:${email}\n`;
+      if(company) vcf += `ORG:${company}\n`;
+      if(position) vcf += `TITLE:${position}\n`;
+      if(address) {
+        vcf += `ADR;TYPE=HOME:;;${address};;;;\n`;
+        // Google Maps link
+        const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(address);
+        vcf += `URL:${mapsUrl}\n`;
+      }
+      let socialUrl = '';
+      if(socialType && socialHandle) {
+        switch(socialType) {
+          case 'Facebook':
+            socialUrl = 'https://facebook.com/' + socialHandle;
+            break;
+          case 'Twitter':
+            socialUrl = 'https://twitter.com/' + socialHandle.replace(/^@/, '');
+            break;
+          case 'LinkedIn':
+            socialUrl = 'https://linkedin.com/in/' + socialHandle;
+            break;
+          case 'Instagram':
+            socialUrl = 'https://instagram.com/' + socialHandle.replace(/^@/, '');
+            break;
+          case 'TikTok':
+            socialUrl = 'https://tiktok.com/@' + socialHandle.replace(/^@/, '');
+            break;
+          case 'YouTube':
+            socialUrl = 'https://youtube.com/' + socialHandle;
+            break;
+          case 'Other':
+            socialUrl = socialHandle;
+            break;
+        }
+        vcf += `X-SOCIALPROFILE;type=${socialType}:${socialUrl}\n`;
+      }
+      if(website) vcf += `URL:${website}\n`;
+      function finishVCF(photoBase64) {
+        if(photoBase64) {
+          vcf += `PHOTO;ENCODING=b;TYPE=JPEG:${photoBase64}\n`;
+        }
+        vcf += "END:VCARD\n";
+        const blob = new Blob([vcf], {type: 'text/vcard'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fullName.replace(/\s+/g, '_') + '.vcf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      if(photoInput.files.length > 0) {
+        encodePhoto(photoInput.files[0], finishVCF);
+      } else {
+        finishVCF("");
+      }
+    };
+  </script>
+</body>
+</html>
