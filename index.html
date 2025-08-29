@@ -147,19 +147,8 @@
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="ri-share-line"></i> Social Media</label>
-          <div class="input-group">
-            <select class="form-select" id="socialType">
-              <option value="">Choose...</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Twitter">Twitter</option>
-              <option value="LinkedIn">LinkedIn</option>
-              <option value="Instagram">Instagram</option>
-              <option value="TikTok">TikTok</option>
-              <option value="YouTube">YouTube</option>
-              <option value="Other">Other</option>
-            </select>
-            <input type="text" class="form-control" id="socialHandle" placeholder="Username/Handle">
-          </div>
+          <div id="socialMediaList"></div>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="addSocialBtn">Add Social Media</button>
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="ri-global-line"></i> Website</label>
@@ -219,6 +208,42 @@
       };
       reader.readAsDataURL(file);
     }
+    // Social media add/remove logic
+    function createSocialInput() {
+      const div = document.createElement('div');
+      div.className = 'input-group mb-2';
+      const select = document.createElement('select');
+      select.className = 'form-select';
+      select.innerHTML = `<option value="">Choose...</option>
+        <option value="Facebook">Facebook</option>
+        <option value="Twitter">Twitter</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="Instagram">Instagram</option>
+        <option value="TikTok">TikTok</option>
+        <option value="YouTube">YouTube</option>
+        <option value="Other">Other</option>`;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-control';
+      input.placeholder = 'Username/Handle';
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'remove-phone';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.onclick = function() {
+        div.remove();
+      };
+      div.appendChild(select);
+      div.appendChild(input);
+      div.appendChild(removeBtn);
+      return div;
+    }
+    const socialMediaList = document.getElementById('socialMediaList');
+    document.getElementById('addSocialBtn').onclick = function() {
+      socialMediaList.appendChild(createSocialInput());
+    };
+    // Add one social media by default
+    socialMediaList.appendChild(createSocialInput());
+
     // Google Maps integration for address
     document.getElementById('mapsBtn').onclick = function() {
       const address = document.getElementById('address').value;
@@ -257,33 +282,39 @@
         const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(address);
         vcf += `URL:${mapsUrl}\n`;
       }
-      let socialUrl = '';
-      if(socialType && socialHandle) {
-        switch(socialType) {
-          case 'Facebook':
-            socialUrl = 'https://facebook.com/' + socialHandle;
-            break;
-          case 'Twitter':
-            socialUrl = 'https://twitter.com/' + socialHandle.replace(/^@/, '');
-            break;
-          case 'LinkedIn':
-            socialUrl = 'https://linkedin.com/in/' + socialHandle;
-            break;
-          case 'Instagram':
-            socialUrl = 'https://instagram.com/' + socialHandle.replace(/^@/, '');
-            break;
-          case 'TikTok':
-            socialUrl = 'https://tiktok.com/@' + socialHandle.replace(/^@/, '');
-            break;
-          case 'YouTube':
-            socialUrl = 'https://youtube.com/' + socialHandle;
-            break;
-          case 'Other':
-            socialUrl = socialHandle;
-            break;
+      // Social media
+      const socialGroups = socialMediaList.querySelectorAll('.input-group');
+      socialGroups.forEach(group => {
+        const socialType = group.querySelector('select').value;
+        const socialHandle = group.querySelector('input').value.trim();
+        let socialUrl = '';
+        if(socialType && socialHandle) {
+          switch(socialType) {
+            case 'Facebook':
+              socialUrl = 'https://facebook.com/' + socialHandle;
+              break;
+            case 'Twitter':
+              socialUrl = 'https://twitter.com/' + socialHandle.replace(/^@/, '');
+              break;
+            case 'LinkedIn':
+              socialUrl = 'https://linkedin.com/in/' + socialHandle;
+              break;
+            case 'Instagram':
+              socialUrl = 'https://instagram.com/' + socialHandle.replace(/^@/, '');
+              break;
+            case 'TikTok':
+              socialUrl = 'https://tiktok.com/@' + socialHandle.replace(/^@/, '');
+              break;
+            case 'YouTube':
+              socialUrl = 'https://youtube.com/' + socialHandle;
+              break;
+            case 'Other':
+              socialUrl = socialHandle;
+              break;
+          }
+          vcf += `X-SOCIALPROFILE;type=${socialType}:${socialUrl}\n`;
         }
-        vcf += `X-SOCIALPROFILE;type=${socialType}:${socialUrl}\n`;
-      }
+      });
       if(website) vcf += `URL:${website}\n`;
       function finishVCF(photoBase64) {
         if(photoBase64) {
